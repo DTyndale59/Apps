@@ -1,0 +1,120 @@
+## Quickstart: Deploy an Azure Kubernetes Service cluster using PowerShell
+## From https://learn.microsoft.com/en-us/azure/aks/learn/quick-kubernetes-deploy-powershell
+## Cloud Shell
+
+## 1) Create a resource group
+
+New-AzResourceGroup -Name myResourceGroup -Location eastus
+
+## 2)Create AKS cluster
+
+New-AzAksCluster -ResourceGroupName myResourceGroup -Name myAKSCluster -NodeCount 1 -GenerateSshKey -WorkspaceResourceId <WORKSPACE_RESOURCE_ID>
+
+## 3)Connect to the cluster
+
+Install-AzAksKubectl
+
+Import-AzAksCredential -ResourceGroupName myResourceGroup -Name myAKSCluster
+
+kubectl get nodes
+
+NAME                       STATUS   ROLES   AGE     VERSION
+aks-nodepool1-31718369-0   Ready    agent   6m44s   v1.15.10
+
+## 4)Deploy the application
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azure-vote-back
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azure-vote-back
+  template:
+    metadata:
+      labels:
+        app: azure-vote-back
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+      - name: azure-vote-back
+        image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
+        env:
+        - name: ALLOW_EMPTY_PASSWORD
+          value: "yes"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 6379
+          name: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: azure-vote-back
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: azure-vote-back
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azure-vote-front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azure-vote-front
+  template:
+    metadata:
+      labels:
+        app: azure-vote-front
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+      - name: azure-vote-front
+        image: mcr.microsoft.com/azuredocs/azure-vote-front:v1
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 80
+        env:
+        - name: REDIS
+          value: "azure-vote-back"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: azure-vote-front
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+  selector:
+    app: azure-vote-front\\
+
+
+## DEPLOY
+
+kubectl apply -f azure-vote.yaml
+
+## Test the application
+
+kubectl get service azure-vote-front --watch
+
