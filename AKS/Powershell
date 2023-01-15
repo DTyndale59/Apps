@@ -8,7 +8,12 @@ New-AzResourceGroup -Name myResourceGroup -Location eastus
 
 ## 2)Create AKS cluster
 
-New-AzAksCluster -ResourceGroupName myResourceGroup -Name myAKSCluster -NodeCount 1 -GenerateSshKey -WorkspaceResourceId <WORKSPACE_RESOURCE_ID>
+New-AzAksCluster 
+-ResourceGroupName myResourceGroup 
+-Name myAKSCluster 
+-NodeCount 1 
+-GenerateSshKey 
+-WorkspaceResourceId <WORKSPACE_RESOURCE_ID>
 
 ## 3)Connect to the cluster
 
